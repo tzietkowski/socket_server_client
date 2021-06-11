@@ -7,13 +7,13 @@ HOST = '127.0.0.1'
 PORT = 65432
 TIME_START_SERVER = time.time()
 
-def uptime_command():
+def uptime_command() -> str: 
     return json.dumps(time.strftime("%H:%M:%S", time.gmtime(time.time() - TIME_START_SERVER)))
 
-def info_command():
+def info_command()-> str: 
     return json.dumps('Ver 1.0, Server start: ' + time.ctime(TIME_START_SERVER))
 
-def help_command():
+def help_command()-> str: 
     return json.dumps({
             'uptime' : 'czas zycia serwera',
             'info' : 'numer wersji serwera, data utworzenia',
@@ -21,10 +21,10 @@ def help_command():
             'stop' : 'zamyka serwer i klienta'
     })
 
-def wrong_command():
+def wrong_command()-> str: 
     return json.dumps('Invalid command')
 
-def main():
+def main() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     server.bind((HOST,PORT))
