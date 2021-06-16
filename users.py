@@ -5,12 +5,9 @@ DATA_FILE_NAME = 'data_user.json'
 
 def load_data(fname = DATA_FILE_NAME) -> list:
     if os.path.isfile(fname):
-        # File exists
         with open(fname, 'r') as outfile:
             data = json.load(outfile)
-            #add checking data
     else:
-        # Create file with admin user
         with open(fname, 'w') as outfile:
             data = {'data': [{
                 'name': 'admin',
@@ -19,7 +16,6 @@ def load_data(fname = DATA_FILE_NAME) -> list:
                 'messages': {'limit': 0, 'char': 256, 'text': ['']}}]}
             json.dump(data, outfile)
     return data.get('data')
-
 
 def save_data(data:list, database = DATA_FILE_NAME):
     with open(database, 'w') as outfile:
@@ -30,7 +26,6 @@ def check_name(name:str, data_base:list) -> bool:
         if user.get('name') == name:
             return False
     return True
-
 
 def add_user(name:str, password = '', group = 'user') -> bool:
     temp_base = load_data()
@@ -47,9 +42,19 @@ def add_user(name:str, password = '', group = 'user') -> bool:
         temp_base.append(new_user)
         save_data(temp_base)
         return True
-    print('uzytkownik juz jest')
     #wyslij komunikat ze podana nazwa jest zajeta
     return False
 
-def del_user(name:str):
-    pass
+def del_user(name:str) -> bool:
+    temp_base = load_data()
+    #no user in database
+    if check_name(name,temp_base):
+        return False
+    for index, user in enumerate(temp_base):
+        if user.get('name') == name:
+            del temp_base[index]
+            save_data(temp_base)
+        return True
+
+
+
