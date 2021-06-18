@@ -6,27 +6,29 @@ class Data_base():
     database_file = 'data_user_class.json'
 
     def __init__(self) -> None:
-        self.database = self.load_data()
-        self.users = User('tom','tom','tom',['a'])
+        self.database = self.load_data_from_json()
+        self.load_users()
+ 
+    def load_users(self):
+        self.users = [User(db.get('name'), db.get('password'), db.get('messages'), db.get('group')) for db in self.load_data_from_json()]
 
-    def load_data(self):
+    def load_data_from_json(self) -> list:
         if os.path.isfile(Data_base.database_file):
             with open(Data_base.database_file, 'r') as outfile:
                 data = json.load(outfile)
         else:
-            with open(Data_base.database_file, 'w') as outfile:
-                data = {'data': [{
+            with open(Data_base.database_file, 'w+') as outfile:
+                self.save_data_from_json(
+                    [{
                     'name': 'admin',
                     'password': 3815113479867748683,
                     'group': 'admin',
-                    'messages': {'limit': 0, 'char': 256, 'text': ['']}}]}
-                json.dump(data, outfile)
-
-        
+                    'messages': {'id': 0, 'from': '', 'text': ''}}])
+                data = json.load(outfile)
         return data.get('data')
      
-    def save_data(data):
-        with open(Data_users.database_file, 'w') as outfile:
+    def save_data_to_json(self,data):
+        with open(Data_base.database_file, 'w') as outfile:
             json.dump({'data': data}, outfile)
         
     def add_user(self):
@@ -38,8 +40,8 @@ class Data_base():
 
 class User:
     
-    def __init__(self, login:str, password:str, message:list, group = 'user') -> None:
-        self.login = login
+    def __init__(self, name:str, password:str, message:list, group = 'user') -> None:
+        self.name = name
         self.__password = password
         self.__group = group
         self.__message = message
@@ -70,4 +72,5 @@ class User:
         self.__password = new_passsword
 
 DB = Data_base()
-print(DB.users.login)
+
+print(DB.users[0].name)
