@@ -1,45 +1,47 @@
 import json
 import os
 
-class Data_base():
-    
-    database_file = 'data_user_class.json'
+
+class DataBase():
+
+    database_file = 'data.json'
+    users = dict()
 
     def __init__(self) -> None:
-        self.load_users()
- 
-    def load_users(self):
-        self.users = [User(db.get('name'), db.get('password'), db.get('messages'), db.get('group')) for db in self.load_data_from_json()]
-        print(*self.users)
+        self.load_data()
 
-    def load_data_from_json(self) -> list:
-        if os.path.isfile(Data_base.database_file):
-            with open(Data_base.database_file, 'r') as outfile:
+    def load_data(self):
+        if os.path.isfile(DataBase.database_file):
+            with open(DataBase.database_file, 'r') as outfile:
                 data = json.load(outfile)
+                self.users = {db.get('name') : \
+                        User(db.get('name'), \
+                            db.get('password'), \
+                            db.get('messages'), \
+                            db.get('group')) \
+                    for db in data}
+
         else:
-            with open(Data_base.database_file, 'w+') as outfile:
-                self.save_data_from_json(
-                    [{
-                    'name': 'admin',
-                    'password': 3815113479867748683,
-                    'group': 'admin',
-                    'messages': {'id': 0, 'from': '', 'text': ''}}])
-                data = json.load(outfile)
-        return data.get('data')
-     
-    def save_data_to_json(self,data):
-        with open(Data_base.database_file, 'w') as outfile:
-            json.dump({'data': data}, outfile)
-        
-    def add_user(self):
-        pass
+            with open(DataBase.database_file, 'w+') as outfile:
+                self.add_user('admin','','admin')
 
-    def del_user(self):
-        pass
+    def save_data(self):
+        with open(DataBase.database_file, 'w') as outfile:
+            json.dump([value.save() for value in self.users.values()], outfile)
+
+    def add_user(self, name:str, password:str, group = 'user'):
+        if name not in self.users.keys():
+            self.users[name] = User(name, password, [], group)
+            self.save_data()
+
+    def del_user(self, name):
+        if name in self.users.keys():
+            del self.users[name]
+            self.save_data()
 
 
 class User:
-    
+
     def __init__(self, name:str, password:str, message:list, group = 'user') -> None:
         self.name = name
         self.__password = password
@@ -49,28 +51,38 @@ class User:
         self.__count_message = len(message)
         self.__max_char = 255
 
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self)->dict:
+        return {\
+            'name': self.name,\
+            'password': self.__password, \
+            'group': self.__group, \
+            "messages": self.__message}
+
     def check_password(self,input_password:str) -> bool:
         return self.__password == input_password
 
     def add_message(self,from_user:str, new_message:str)->bool:
-        if (self.__group == 'user' and len(self.__message) == self.__max_message) or (len(new_message) > self.__max_char):
+        if (self.__group == 'user' and \
+             len(self.__message) == self.__max_message) or \
+             (len(new_message) > self.__max_char):
             return False
         self.__count_message += 1
-        self.__message.append((self.__count_message, from_user, new_message))
+        self.__message.append((from_user, new_message))
         return True
 
-    def del_message(self, id)-> bool:
-        if 0 < id < self.__count_message + 1:
-            del self.__message[id - 1]
+    def del_message(self, number_message)-> bool:
+        if 0 < number_message < self.__count_message + 1:
+            self.__count_message -= 1
+            del self.__message[number_message - 1]
             return True
         return False
 
     def list_message(self)->list:
-        return self.__message
+        return [{index: value} for index, value in enumerate(self.__message, 1)]
 
     def change_password(self,new_passsword:str):
         self.__password = new_passsword
 
-DB = Data_base()
-
-#print(DB.users[0].name)
