@@ -6,11 +6,11 @@ class Data_base():
     database_file = 'data_user_class.json'
 
     def __init__(self) -> None:
-        self.database = self.load_data_from_json()
         self.load_users()
  
     def load_users(self):
         self.users = [User(db.get('name'), db.get('password'), db.get('messages'), db.get('group')) for db in self.load_data_from_json()]
+        print(*self.users)
 
     def load_data_from_json(self) -> list:
         if os.path.isfile(Data_base.database_file):
@@ -73,4 +73,4 @@ class User:
 
 DB = Data_base()
 
-print(DB.users[0].name)
+#print(DB.users[0].name)
