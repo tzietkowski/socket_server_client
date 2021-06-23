@@ -8,12 +8,13 @@ class Client:
 
     def __init__(self, host ='127.0.0.1', port = 65432) -> None:
         self.login = False
+        self.user_name = ''
         self.connected_with_serwer = False
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.connect(host, port)
             self.command()
-        except socket.error:
+        except :#socket.error:
             print('Server error')
         finally:
             self.disconnect()
@@ -48,10 +49,12 @@ class Client:
         """Function login user in server"""
 
         while True:
-            self.send_command(json.dumps({\
+            self.send_command({\
                     'user' : input('Login: '), \
-                    'password': input('Password: ')}))
-            if json.loads(self.client.recv(2048))['answer'] == 'ok':
+                    'password': input('Password: ')})
+            answer_from_server = json.loads(self.client.recv(2048))
+            if answer_from_server['answer'] == 'ok':
+                self.user_name = answer_from_server['user']
                 self.login = True
                 print('Logged in')
                 return True
@@ -61,13 +64,13 @@ class Client:
     def send_command(self, command:str):
         """Function send command to server"""
 
-        self.client.send(command.encode())
+        self.client.send(json.dumps({'user': self.user_name, 'command': command}).encode())
 
 
     def recv_command(self):
         """Function receiving from server"""
 
-        print('Server: ' + self.client.recv(2048).decode())
+        print('Server: ' + json.loads(self.client.recv(2048).decode())['command'])
 
 
 bobek = Client()
