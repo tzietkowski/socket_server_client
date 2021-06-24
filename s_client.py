@@ -29,8 +29,9 @@ class Client:
 
 
     def disconnect(self)->None:
-        """Function disconnect to serwer"""
+        """Function disconnect to the serwer"""
 
+        print('Closing connection to the server')
         self.client.close()
 
 
@@ -41,7 +42,10 @@ class Client:
             print('Please log in')
             self.login_user()
             while self.login:
-                self.send_command(input('command: '))
+                command_to_send = input('command: ')
+                self.send_command(command_to_send)
+                if command_to_send == 'stop':
+                    return
                 self.recv_command()
 
 

@@ -16,8 +16,11 @@ class Server:
         self.server_run = False
         self.login = False
         self.server_scoket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.commands = {'info': {'func': 'self.info()','help': 'taka a sraka komenda'},\
-                        'stop': {'func': 'self.stop_server()','help':'Server stop'}}
+        self.commands = {'info': {'func': self.info ,'help': 'Info about the server version'},\
+                        'stop': {'func': self.stop_server ,'help':'Server stop'},\
+                        'help': {'func': self.help ,'help':'Server stop'},\
+                        'uptime': {'func': self.uptime ,'help':'Server lifetime'}\
+                            }
         
         try:
             self.server = self.start_server(host, port)
@@ -26,7 +29,7 @@ class Server:
         except:
             print('cos nie tak z serwerem')
         finally:
-            print('koniec')
+            print('The end')
             self.stop_server()
 
 
@@ -44,6 +47,7 @@ class Server:
     def stop_server(self)-> None:
         """Function stop server"""
 
+        print('Closing the server')
         self.server_scoket.close()
 
 
@@ -67,7 +71,9 @@ class Server:
         while True:
             message = json.loads(self.server.recv(64).decode())
             if message['command'] in self.commands.keys():
-                self.send(message['user'], self.commands[message['command']]['func'])
+                if message['command'] == 'stop':
+                    return
+                self.send(message['user'], self.commands[message['command']]['func']())
             else:
                 self.send(message['user'], 'Wrong command')
                 
@@ -80,65 +86,19 @@ class Server:
 
 
     def info(self)-> str:
+        """Function info about the server version"""
 
-        return ('Ver 1.0, Server start: ' + time.ctime(self.time_start))
+        return ('Ver 2.0, Server start: ' + time.ctime(self.time_start))
 
     def help(self)-> str:
-        pass
+        """Function help - list of commands"""
+
+        lista = 'Tu bedzie lista '
+        return lista
+
+    def uptime(self) -> None:
+
+        return time.strftime("%H:%M:%S", time.gmtime(time.time() - self.time_start))
 
 
 bobek = Server()
-
-
-
-
-
-
-
-
-# def uptime_command() -> str: 
-#     return json.dumps(time.strftime("%H:%M:%S", time.gmtime(time.time() - TIME_START_SERVER)))
-
-# def info_command()-> str: 
-#     return json.dumps('Ver 1.0, Server start: ' + time.ctime(TIME_START_SERVER))
-
-# def help_command()-> str: 
-#     return json.dumps({
-#             'uptime' : 'czas zycia serwera',
-#             'info' : 'numer wersji serwera, data utworzenia',
-#             'help' : 'pomoc',
-#             'stop' : 'zamyka serwer i klienta'
-#     })
-
-
-
-# def wrong_command()-> str: 
-#     return json.dumps('Invalid command')
-
-# def main() -> None:
-#     db = DataBase()
-#     db.add_user('tom','1','user')
-#     serwer = start_server()
-#     while login_user(serwer, db):
-#         while True:
-#             message = (serwer.recv(64)).decode()
-#             serwer.send(message.encode())
-#     stop_server()
-
-#     #comands
-#     # commands = {
-#     #         'uptime': uptime_command,
-#     #         'info': info_command,
-#     #         'help': help_command,
-#     #         'stop': server.close
-#     #     }
-#     # try:
-#     #     while True:
-
-#     #         message = (conn.recv(64)).decode()
-#     #         if message in commands:
-#     #             re_message = commands[message]()
-#     #         else:
-#     #             re_message = wrong_command()
-#     #         conn.send(re_message.encode())
-
