@@ -67,6 +67,11 @@ class User:
 
         return self.name
 
+    def max_char(self) -> int:
+        """Function return max characters"""
+
+        return self.__max_char
+
     def save(self)->dict:
         """Function save user"""
 
