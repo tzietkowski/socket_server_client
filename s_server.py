@@ -146,7 +146,7 @@ class Server:
                     self.send('New user premissons[admin/user]:')
                     new_premis = self.recv()['command']
                 self.db.add_user(new_login, new_pass, new_premis)
-                return 'added user'
+                return 'added user '
 
     @admin_req
     def del_user(self) -> str:
@@ -159,5 +159,6 @@ class Server:
         else:
             self.db.del_user(del_name)
             return 'User removed'
+    
 
 bobek = Server()
