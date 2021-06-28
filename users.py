@@ -110,3 +110,8 @@ class User:
         """Function change password"""
 
         self.__password = new_passsword
+
+    def check_admin(self):
+        """Function checking admin users"""
+
+        return True if self.__group == 'admin' else False
