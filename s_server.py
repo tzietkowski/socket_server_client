@@ -18,12 +18,14 @@ class Server:
         self.login = False
         self.user_admin = False
         self.server_scoket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.commands = {'info': {'func': self.info ,'help': 'Info about the server version'},\
-                        'stop': {'func': self.stop_server ,'help':'Server stop'},\
-                        'help': {'func': self.help ,'help':'Server stop'},\
-                        'new_user': {'func': self.new_user ,'help':'Add new user: \
-                            name_user:password'},\
+        self.commands = {'del_message': {'func': self.del_message ,'help':'Remove message'},\
                         'del_user': {'func': self.del_user ,'help':'Remove user'},\
+                        'help': {'func': self.help ,'help':'List of commands'},\
+                        'info': {'func': self.info ,'help': 'Info about the server version'},\
+                        'list_message': {'func': self.list_message ,'help': 'List of all messages'},\
+                        'new_user': {'func': self.new_user ,'help':'Add new user'},\
+                        'send_message' : {'func': self.send_message ,'help':'Sending message to user'},\
+                        'stop': {'func': self.stop_server ,'help':'Server stop'},\
                         'uptime': {'func': self.uptime ,'help':'Server lifetime'}\
                             }
 
@@ -108,7 +110,7 @@ class Server:
     def recv(self)->str:
         """Function recved message form client"""
 
-        return json.loads(self.server.recv(64).decode())
+        return json.loads(self.server.recv(2048).decode())
 
     def info(self)-> str:
         """Function info about the server version"""
@@ -119,7 +121,9 @@ class Server:
     def help(self)-> str:
         """Function help - list of commands"""
 
-        lista = 'Tu bedzie lista '
+        lista = '\n'
+        for key, value in self.commands.items():
+            lista += str(key) + ' - ' + str(value['help']) + '\n'
         return lista
 
 
@@ -160,5 +164,31 @@ class Server:
             self.db.del_user(del_name)
             return 'User removed'
     
+    def send_message(self) -> str:
+        """Function sending message"""
+
+        self.send('Message to user:')
+        login_to_send = self.recv()['command']
+        if login_to_send not in self.db.users.keys():
+            return 'No such user'
+        else:
+            self.send('Message(max 255 charakters):')
+            message = self.recv()['command']
+            if len(message) > self.db.users[self.name_user].max_char():
+                return 'Message too long'
+            self.db.users[login_to_send].add_message(self.name_user, message)
+            self.db.save_data()
+            return 'Message sent'
+
+    def list_message(self) -> str:
+        """Function list message"""
+
+        return 'List Message'
+
+    def del_message(self) -> str:
+        """Function remove message"""
+
+        return 'Message removed'
+
 
 bobek = Server()
