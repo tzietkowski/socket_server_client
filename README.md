@@ -1,3 +1,3 @@
-# 002_Socket_app
+# 003_Socket_app
 
-First project with socket in python
+Second project with socket in python
