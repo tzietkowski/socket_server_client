@@ -4,7 +4,7 @@ import os
 
 
 class DataBase():
-    """Clas DataBase"""
+    """Class DataBase"""
 
     database_file = 'data.json'
     users = dict()
@@ -38,16 +38,14 @@ class DataBase():
     def add_user(self, name:str, password:str, group = 'user'):
         """Function add new user"""
 
-        if name not in self.users.keys():
-            self.users[name] = User(name, password, [], group)
-            self.save_data()
+        self.users[name] = User(name, password, [], group)
+        self.save_data()
 
     def del_user(self, name):
         """Function delete user"""
 
-        if name in self.users.keys():
-            del self.users[name]
-            self.save_data()
+        del self.users[name]
+        self.save_data()
 
 
 class User:
@@ -109,7 +107,8 @@ class User:
     def list_message(self)->list:
         """Function list message"""
 
-        return [{index: value} for index, value in enumerate(self.__message, 1)]
+        #return [{index: value} for index, value in enumerate(self.__message, 1)]
+        return self.__message
 
     def change_password(self,new_passsword:str):
         """Function change password"""
