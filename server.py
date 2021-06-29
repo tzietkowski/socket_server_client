@@ -16,17 +16,17 @@ class Server:
         self.name_user = ''
         self.user_admin = False
         self.server_scoket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.commands = { 'change_password': {'func': self.change_password ,\
+        self.commands = { 'pass': {'func': self.change_password ,\
                         'help':'Change password'},\
-                        'del_message': {'func': self.del_message ,'help':'Remove message'},\
-                        'del_user': {'func': self.del_user ,'help':'Remove user'},\
+                        'del_m': {'func': self.del_message ,'help':'Remove message'},\
+                        'del_u': {'func': self.del_user ,'help':'Remove user'},\
                         'help': {'func': self.help ,'help':'List of commands'},\
                         'info': {'func': self.info ,'help': 'Info about the server version'},\
-                        'list_message': {'func': self.list_message ,'help':\
+                        'list': {'func': self.list_message ,'help':\
                              'List of all messages'},\
                         'logout': {'func': self.logout ,'help':'User logout'},\
-                        'new_user': {'func': self.new_user ,'help':'Add new user'},\
-                        'send_message' : {'func': self.send_message ,'help':\
+                        'add_user': {'func': self.new_user ,'help':'Add new user'},\
+                        'send' : {'func': self.send_message ,'help':\
                             'Sending message to user'},\
                         'stop': {'func': self.stop_server ,'help':'Server stop'},\
                         'uptime': {'func': self.uptime ,'help':'Server lifetime'}\
