@@ -1,6 +1,7 @@
 """users"""
 import json
 import os
+from re import S
 
 
 class DataBase():
@@ -60,11 +61,6 @@ class User:
         self.__count_message = len(message)
         self.__max_char = 255
 
-    def __str__(self) -> str:
-        """Function return name user"""
-
-        return self.name
-
     def max_char(self) -> int:
         """Function return max characters"""
 
@@ -107,7 +103,6 @@ class User:
     def list_message(self)->list:
         """Function list message"""
 
-        #return [{index: value} for index, value in enumerate(self.__message, 1)]
         return self.__message
 
     def change_password(self,new_passsword:str):
@@ -118,4 +113,9 @@ class User:
     def check_admin(self):
         """Function checking admin users"""
 
-        return True if self.__group == 'admin' else False
+        return self.__group == 'admin'
+
+    def count_message(self)-> bool:
+        """Function count message"""
+
+        return self.__count_message < self.__max_message or self.__group == 'admin'

@@ -13,17 +13,18 @@ class Server:
     def __init__(self, host = '127.0.0.1', port = 65432) -> None:
         self.time_start = time.time()
         self.db = DataBase()
-
-        self.server_run = False
-        self.login = False
+        self.name_user = ''
         self.user_admin = False
         self.server_scoket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.commands = {'del_message': {'func': self.del_message ,'help':'Remove message'},\
+        self.commands = { 'change_password': {'func': self.change_password ,\
+                        'help':'Change password'},\
+                        'del_message': {'func': self.del_message ,'help':'Remove message'},\
                         'del_user': {'func': self.del_user ,'help':'Remove user'},\
                         'help': {'func': self.help ,'help':'List of commands'},\
                         'info': {'func': self.info ,'help': 'Info about the server version'},\
                         'list_message': {'func': self.list_message ,'help':\
                              'List of all messages'},\
+                        'logout': {'func': self.logout ,'help':'User logout'},\
                         'new_user': {'func': self.new_user ,'help':'Add new user'},\
                         'send_message' : {'func': self.send_message ,'help':\
                             'Sending message to user'},\
@@ -33,10 +34,9 @@ class Server:
 
         try:
             self.server = self.start_server(host, port)
-            self.login = self.login_user()
             self.command()
-        except:
-            print('cos nie tak z serwerem')
+        except socket.error:
+            print('Error server')
         finally:
             print('The end')
             self.stop_server()
@@ -73,28 +73,41 @@ class Server:
         self.server_scoket.close()
 
 
-    def login_user(self)-> bool:
+    def login_user(self)-> None:
         """Function login user"""
 
-        while not self.login:
+        while self.name_user == '':
             message = self.recv()
-            self.name_user = message['command']['user']
-            if self.name_user in self.db.users.keys() and self.db.users[\
-                self.name_user].check_password(message['command']['password']):
+            if message['command']['user'] in self.db.users.keys() and self.db.users[\
+                message['command']['user']].check_password(message['command']['password']):
+                print('wysylam')
                 self.server.send(json.dumps(\
-                    {'user': self.name_user, 'answer': 'ok'}).encode())
-                print('login user: ' + self.name_user)
+                    {'user': message['command']['user'], 'answer': 'ok'}).encode())
+                print('login user: ' + message['command']['user'])
+
+                self.name_user = message['command']['user']
                 self.user_admin = self.db.users[self.name_user].check_admin()
-                return True
+                return
             else:
                 self.server.send(json.dumps({\
                     'user': self.name_user, 'answer': 'wrong login or password'}).encode())
-        return False
+        return
+
+
+    def logout(self) -> str:
+        """Function logout user"""
+
+        self.name_user = ''
+        self.user_admin = False
+
+        return 'logout'
+
 
     def command(self)-> None:
         """Function run command"""
 
         while True:
+            self.login_user()
             message = self.recv()
             if message['command'] in self.commands.keys():
                 if message['command'] == 'stop':
@@ -174,6 +187,8 @@ class Server:
         if login_to_send not in self.db.users.keys():
             return 'No such user'
         else:
+            if not self.db.users[login_to_send].count_message():
+                return 'The user has a full mailbox'
             self.send('Message(max 255 charakters):')
             message = self.recv()['command']
             if len(message) > self.db.users[self.name_user].max_char():
@@ -202,5 +217,19 @@ class Server:
         else:
             return 'Wrong number'
 
+    def change_password(self) -> str:
+        """Function change password"""
+
+        self.send('old password:')
+        if self.db.users[self.name_user].check_password(self.recv()['command']):
+            self.send('New password:')
+            pass1 = self.recv()['command']
+            self.send('Re new password:')
+            pass2 = self.recv()['command']
+            if pass1 == pass2:
+                self.db.users[self.name_user].change_password(pass1)
+                self.db.save_data()
+                return 'Password changed'
+        return 'Password not changed'
 
 serwer1 = Server()
