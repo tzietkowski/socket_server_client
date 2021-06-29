@@ -21,3 +21,7 @@ The client has commands:
     - uptime - Server lifetime.
 
 Users send messages.
+
+Fistr start:
+user : admin
+pass :
