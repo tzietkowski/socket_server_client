@@ -66,7 +66,7 @@ class User:
 
         return self.__max_char
 
-    def save(self)->dict:
+    def save(self)-> dict:
         """Function save user"""
 
         return {\
@@ -93,11 +93,13 @@ class User:
 
     def del_message(self, number_message)-> bool:
         """Function delete message"""
-
-        if 0 < number_message < self.__count_message + 1:
-            self.__count_message -= 1
-            del self.__message[number_message - 1]
-            return True
+        if (0 < number_message < self.__count_message + 1) and self.__count_message != 0:
+            try:
+                del self.__message[number_message]
+                self.__count_message -= 1
+                return True
+            except IndexError:
+                return False
         return False
 
     def list_message(self)->list:
@@ -105,7 +107,7 @@ class User:
 
         return self.__message
 
-    def change_password(self,new_passsword:str):
+    def change_password(self,new_passsword:str) -> None:
         """Function change password"""
 
         self.__password = new_passsword
