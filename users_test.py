@@ -1,4 +1,3 @@
-import py
 from users import User
 import pytest
 
@@ -106,6 +105,3 @@ class TestUser():
     def test_check_admin(self, group_user, good):
         user = User('user1','user1',[],group_user)
         assert user.check_admin() == good
-
-class TestDataBase():
-    pass

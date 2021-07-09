@@ -7,17 +7,18 @@ from re import S
 class DataBase():
     """Class DataBase"""
 
-    database_file = 'data.json'
+
     users = dict()
 
-    def __init__(self) -> None:
+    def __init__(self, file = 'data.json') -> None:
+        self.database_file = file
         self.load_data()
 
-    def load_data(self):
+    def load_data(self) -> None:
         """Function load data from json file"""
 
-        if os.path.isfile(DataBase.database_file):
-            with open(DataBase.database_file, 'r') as outfile:
+        if os.path.isfile(self.database_file):
+            with open(self.database_file, 'r') as outfile:
                 data = json.load(outfile)
                 self.users = {db.get('name') : \
                         User(db.get('name'), \
@@ -27,16 +28,16 @@ class DataBase():
                     for db in data}
 
         else:
-            with open(DataBase.database_file, 'w+') as outfile:
+            with open(self.database_file, 'w+') as outfile:
                 self.add_user('admin','','admin')
 
-    def save_data(self):
+    def save_data(self) -> None:
         """Function save data"""
 
-        with open(DataBase.database_file, 'w') as outfile:
+        with open(self.database_file, 'w') as outfile:
             json.dump([value.save() for value in self.users.values()], outfile)
 
-    def add_user(self, name:str, password:str, group = 'user'):
+    def add_user(self, name:str, password:str, group = 'user') -> None:
         """Function add new user"""
 
         self.users[name] = User(name, password, [], group)
@@ -121,3 +122,4 @@ class User:
         """Function count message"""
 
         return self.__count_message < self.__max_message or self.__group == 'admin'
+
