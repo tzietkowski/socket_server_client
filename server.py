@@ -4,17 +4,19 @@ import socket
 import time
 import json
 import re
+import os
 from users import DataBase
-
 
 class Server:
     """Class server"""
 
-    def __init__(self, host = '127.0.0.1', port = 65432) -> None:
+    def __init__(self) -> None:
+
         self.time_start = time.time()
-        self.db = DataBase()
         self.name_user = ''
         self.user_admin = False
+        self.__host = '127.0.0.1'
+        self.__port = 65432
         self.server_scoket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.commands = { 'pass': {'func': self.change_password ,\
                         'help':'Change password'},\
@@ -33,13 +35,29 @@ class Server:
                             }
 
         try:
-            self.server = self.start_server(host, port)
+            self.__load_config()
+            self.server = self.start_server(self.__host, self.__port)
+            self.db = DataBase()
             self.command()
         except socket.error:
             print('Error server')
         finally:
             print('The end')
             self.stop_server()
+
+    def __load_config(self) -> None:
+        """Load config parameters"""
+
+        if os.path.isfile('config.ini'):
+             with open('config.ini', 'r') as outfile:
+                data = json.load(outfile)
+                self.__host = data['ip_serwer']
+                self.__port = data['port']
+                self.__user_db = data['user_db']
+                self.__pass_db = data['pass_db']
+        else:
+            print('Configuration file not found')
+            raise NameError('No configuration file')
 
     def admin_req(func):
         """Decorator check premmison"""
@@ -232,4 +250,4 @@ class Server:
                 return 'Password changed'
         return 'Password not changed'
 
-serwer1 = Server()
+serwer = Server()
