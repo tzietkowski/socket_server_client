@@ -5,7 +5,8 @@ import time
 import json
 import re
 import os
-from users import DataBase
+from data_base import Data_Sql as db
+#from users import DataBase
 
 class Server:
     """Class server"""
@@ -37,7 +38,6 @@ class Server:
         try:
             self.__load_config()
             self.server = self.start_server(self.__host, self.__port)
-            self.db = DataBase()
             self.command()
         except socket.error:
             print('Error server')
@@ -53,6 +53,7 @@ class Server:
                 data = json.load(outfile)
                 self.__host = data['ip_serwer']
                 self.__port = data['port']
+                self.__db_name = data['db_name']
                 self.__user_db = data['user_db']
                 self.__pass_db = data['pass_db']
         else:
@@ -96,15 +97,14 @@ class Server:
 
         while self.name_user == '':
             message = self.recv()
-            if message['command']['user'] in self.db.users.keys() and self.db.users[\
-                message['command']['user']].check_password(message['command']['password']):
+            if db().check_user_exists(message['command']['user']) and \
+                db().check_user_password(message['command']['user'],message['command']['password']):
                 print('wysylam')
                 self.server.send(json.dumps(\
                     {'user': message['command']['user'], 'answer': 'ok'}).encode())
                 print('login user: ' + message['command']['user'])
-
                 self.name_user = message['command']['user']
-                self.user_admin = self.db.users[self.name_user].check_admin()
+                self.user_admin = db().check_admin(self.name_user)
                 return
             else:
                 self.server.send(json.dumps({\
@@ -174,15 +174,12 @@ class Server:
         while True:
             self.send('New user login:')
             new_login = self.recv()['command']
-            if new_login not in self.db.users.keys():
+            if not db().check_user_exists(new_login):
                 self.send('New user password:')
                 new_pass = self.recv()['command']
                 self.send('New user premissons[admin/user]:')
-                new_premis = self.recv()['command']
-                while not (new_premis == 'admin' or new_premis == 'user'):
-                    self.send('New user premissons[admin/user]:')
-                    new_premis = self.recv()['command']
-                self.db.add_user(new_login, new_pass, new_premis)
+                new_premis = True if self.recv()['command'] == 'admin' else False
+                db().add_user(new_login, new_pass, new_premis)
                 return 'added user '
 
     @admin_req
@@ -191,10 +188,10 @@ class Server:
 
         self.send('Username to remove:')
         del_name = self.recv()['command']
-        if del_name not in self.db.users.keys():
+        if not db().check_user_exists(del_name):
             return 'No such user'
         else:
-            self.db.del_user(del_name)
+            db().del_user(del_name)
             return 'User removed'
 
     def send_message(self) -> str:
@@ -202,26 +199,20 @@ class Server:
 
         self.send('Message to user:')
         login_to_send = self.recv()['command']
-        if login_to_send not in self.db.users.keys():
+        if not db().check_user_exists(login_to_send):
             return 'No such user'
         else:
-            if not self.db.users[login_to_send].count_message():
+            if not db().count_message < 5 and self.user_admin:
                 return 'The user has a full mailbox'
             self.send('Message(max 255 charakters):')
             message = self.recv()['command']
-            if len(message) > self.db.users[self.name_user].max_char():
-                return 'Message too long'
-            self.db.users[login_to_send].add_message(self.name_user, message)
-            self.db.save_data()
+            db().add_message(self.name_user, login_to_send, message)
             return 'Message sent'
 
     def list_message(self) -> str:
         """Function list message"""
 
-        text_list = '\nNr. From  - Text \n'
-        for index, value in enumerate(self.db.users[self.name_user].list_message(), 1):
-            text_list += str(index) + '. ' + str(value[0]) + ' - ' + str(value[1] + '\n')
-        return text_list
+        return db().list_message(self.name_user)
 
     def del_message(self) -> str:
         """Function remove message"""
@@ -229,8 +220,7 @@ class Server:
         self.send('Numer message to remove:')
         message = self.recv()['command']
         if re.search(r'\d', message):
-            self.db.users[self.name_user].del_message(int(message))
-            self.db.save_data()
+            db().del_message(self.name_user, int(message))
             return 'Message removed'
         else:
             return 'Wrong number'
@@ -239,14 +229,13 @@ class Server:
         """Function change password"""
 
         self.send('old password:')
-        if self.db.users[self.name_user].check_password(self.recv()['command']):
-            self.send('New password:')
-            pass1 = self.recv()['command']
-            self.send('Re new password:')
-            pass2 = self.recv()['command']
-            if pass1 == pass2:
-                self.db.users[self.name_user].change_password(pass1)
-                self.db.save_data()
+        old = self.recv()['command']
+        self.send('New password:')
+        new_1 = self.recv()['command']
+        self.send('Re new password:')
+        new_2 = self.recv()['command']
+        if new_1 == new_2:
+            if db().change_user_password(self.name_user, old, new_1):
                 return 'Password changed'
         return 'Password not changed'
 

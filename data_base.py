@@ -1,7 +1,7 @@
 import re
 import psycopg2
 
-class Data_base_sql():
+class Data_Sql():
     """Class of communication with the database"""
 
     def __init__(self) -> None:
@@ -77,7 +77,7 @@ class Data_base_sql():
 
         if not self.check_user_exists(name):
             command = """
-                INSERT IN TO 
+                INSERT INTO 
                     users (name, pass, admin) 
                 VALUES 
                     ('%s','%s', %s);
@@ -160,7 +160,7 @@ class Data_base_sql():
 
     def add_message(self,name:str, to_user:str, message:str)-> bool:
         """Function send message"""
-        
+
         if self.check_user_exists(name) and self.check_user_exists(to_user) and \
             (self.count_message(name) < 5 or self.check_admin(name)):
             command = """
@@ -263,8 +263,3 @@ class Data_base_sql():
             admin = self.cursor.fetchone()
             return admin[0]
         return 0
-
-db = Data_base_sql()
-#print(db.check_name(5))
-#print(db.list_message('tomek'))
-print(db.count_message('tomek111'))

@@ -6,7 +6,7 @@ import json
 class Client:
     """Class client"""
 
-    def __init__(self, host ='127.0.0.1', port = 65432) -> None:
+    def __init__(self, host ='127.0.0.1', port = 65432):
         self.user_name = ''
         self.connected_with_serwer = False
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
