@@ -32,15 +32,15 @@ class Data_base_sql():
         commands = (
                     """
                     CREATE TABLE IF NOT EXISTS users(
-                        id SERIAL PRIMARY KEY,
+                        id_user SERIAL PRIMARY KEY,
                         name VARCHAR(25) NOT NULL UNIQUE,
                         pass VARCHAR(25) NOT NULL,
                         admin BOOLEAN DEFAULT FALSE
                     );
                     """,
                      """
-                    CREATE TABLE IF NOT EXISTS message(
-                        id SERIAL,
+                    CREATE TABLE IF NOT EXISTS messages(
+                        id_mess SERIAL,
                         id_user INTEGER NOT NULL,
                         user_from INTEGER NOT NULL,
                         message VARCHAR(255) NOT NULL,
@@ -58,7 +58,15 @@ class Data_base_sql():
         """Function that checks if the user is in the bottom database"""
 
         command = """
-            SELECT 1 WHERE EXISTS (SELECT name FROM users WHERE name='%s');
+            SELECT
+                1 
+            WHERE EXISTS (
+                SELECT 
+                    name 
+                FROM 
+                    users 
+                WHERE 
+                    name='%s');
         """ %(name_user)
         self.cursor.execute(command)
         self.connection.commit()
@@ -69,7 +77,10 @@ class Data_base_sql():
 
         if not self.check_user_exists(name):
             command = """
-                insert into users (name, pass, admin) values ('%s','%s', %s);
+                INSERT IN TO 
+                    users (name, pass, admin) 
+                VALUES 
+                    ('%s','%s', %s);
             """ %(name, password, group)
             self.cursor.execute(command)
             self.connection.commit()
@@ -81,7 +92,10 @@ class Data_base_sql():
 
         if self.check_user_exists(name):
             command = """
-                delete from users where name='%s';
+                DELETE FROM 
+                    users 
+                WHERE
+                    name='%s';
             """ %(name)
             self.cursor.execute(command)
             self.connection.commit()
@@ -93,7 +107,12 @@ class Data_base_sql():
 
         if self.check_user_exists(name):
             command = """
-                select pass from users where name='%s';
+                SELECT
+                    pass
+                FROM
+                    users
+                WHERE
+                    name='%s';
             """ %(name)
             self.cursor.execute(command)
             self.connection.commit()
@@ -101,48 +120,107 @@ class Data_base_sql():
             return password[0] == input_password
         return False
 
+    def check_name(self, id:int) -> str:
+        """Function name user"""
+
+        command = """
+                SELECT
+                    name
+                FROM
+                    users
+                WHERE
+                    id_user='%i';
+            """ %(id)
+        self.cursor.execute(command)
+        self.connection.commit()
+        name = self.cursor.fetchone()
+        if name != None:
+            return name[0]
+        return 'User not exists'
+
+
+     
+    def check_id(self, name:str) -> int:
+        """Function check id user"""
+         
+        if self.check_user_exists(name):
+            command = """
+                SELECT
+                    id_user
+                FROM
+                    users
+                WHERE
+                    name='%s';
+            """ %(name)
+            self.cursor.execute(command)
+            self.connection.commit()
+            id = self.cursor.fetchone()
+            return id[0]
+        return None
+
     def add_message(self,name:str, to_user:str, message:str)-> bool:
         """Function send message"""
-
-        if self.check_user_exists(name) and self.check_user_exists(to_user):
-            self.cursor.execute('''select id from users where name='%s';'''%(name))
-            self.connection.commit()
-            name_id = self.cursor.fetchone()
-            self.cursor.execute('''select id from users where name='%s';'''%(to_user))
-            self.connection.commit()
-            to_user_id = self.cursor.fetchone()
+        
+        if self.check_user_exists(name) and self.check_user_exists(to_user) and \
+            (self.count_message(name) < 5 or self.check_admin(name)):
             command = """
-                insert into message(id_user, user_from, message) values(%i,%i,'%s'); 
-            """ %(to_user_id[0], name_id[0], message)
+                INSERT INTO
+                    message(id_user, user_from, message) 
+                VALUES
+                    (%i,%i,'%s'); 
+            """ %(self.check_id(to_user), self.check_id(name), message[0:255])
             self.cursor.execute(command)
             self.connection.commit()
             return True
         return False
-        
 
     def del_message(self, name:str, number_message:int)-> bool:
         """Function delete message"""
 
         if self.check_user_exists(name):
             command = """
-                delete from message where id='%s';
+                DELTETE FROM
+                    messages 
+                WHERE
+                    id_mess=%s;
             """ %(name)
             self.cursor.execute(command)
             self.connection.commit()
             return True
         return False
 
-    def list_message(self)-> list:
+    def list_message(self, name)-> list:
         """Function list message"""
 
-        pass
+        if self.check_user_exists(name):
+            command = """
+                SELECT
+                    users.id_user, user_from, message
+                FROM
+                    users
+                JOIN
+                    messages
+                ON
+                    users.id_user = messages.id_user
+                WHERE
+                    users.id_user=%i;
+            """ %(self.check_id(name))
+            self.cursor.execute(command)
+            self.connection.commit()
+            answer = self.cursor.fetchall()
+            return [(self.check_name(message[0]), self.check_name(message[1]), message[2]) for message in answer]
 
     def change_user_password(self,name:str, old_password:str, new_passsword:str) -> bool:
         """Function change password"""
 
         if self.check_user_exists(name) and self.check_user_password(name, old_password):
             command = """
-                update users set pass='%s' where name='%s';
+                UPDATE
+                    users
+                SET
+                    pass='%s'
+                WHERE
+                    name='%s';
             """ %(new_passsword, name)
             self.cursor.execute(command)
             self.connection.commit()
@@ -155,7 +233,12 @@ class Data_base_sql():
 
         if self.check_user_exists(name):
             command = """
-                select admin from users where name='%s';
+                SELECT
+                    admin
+                FROM
+                    users
+                WHERE
+                    name='%s';
             """ %(name)
             self.cursor.execute(command)
             self.connection.commit()
@@ -163,10 +246,25 @@ class Data_base_sql():
             return admin[0]
         return False
 
-    def count_message(self)-> bool:
+    def count_message(self, name:str)-> int:
         """Function count message"""
-
-        pass
+        
+        if self.check_user_exists(name):
+            command = """
+                SELECT
+                    count(message)
+                FROM
+                    messages
+                WHERE
+                    id_user=%i;
+            """ %(self.check_id(name))
+            self.cursor.execute(command)
+            self.connection.commit()
+            admin = self.cursor.fetchone()
+            return admin[0]
+        return 0
 
 db = Data_base_sql()
-print(db.add_message('tomek','tomek111','asfasf'))
+#print(db.check_name(5))
+#print(db.list_message('tomek'))
+print(db.count_message('tomek111'))
