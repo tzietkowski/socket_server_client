@@ -5,8 +5,8 @@ import time
 import json
 import re
 import os
-from data_base import Data_Sql as db
-#from users import DataBase
+from data_sql import Sql as db
+
 
 class Server:
     """Class server"""
@@ -37,6 +37,7 @@ class Server:
 
         try:
             self.__load_config()
+            db().setup()
             self.server = self.start_server(self.__host, self.__port)
             self.command()
         except socket.error:
@@ -53,9 +54,6 @@ class Server:
                 data = json.load(outfile)
                 self.__host = data['ip_serwer']
                 self.__port = data['port']
-                self.__db_name = data['db_name']
-                self.__user_db = data['user_db']
-                self.__pass_db = data['pass_db']
         else:
             print('Configuration file not found')
             raise NameError('No configuration file')
@@ -202,7 +200,7 @@ class Server:
         if not db().check_user_exists(login_to_send):
             return 'No such user'
         else:
-            if not db().count_message < 5 and self.user_admin:
+            if db().count_message(self.name_user) > 5 and self.user_admin:
                 return 'The user has a full mailbox'
             self.send('Message(max 255 charakters):')
             message = self.recv()['command']
@@ -211,16 +209,21 @@ class Server:
 
     def list_message(self) -> str:
         """Function list message"""
+        text_list = '\nNr. From  - ID - Text \n'
+        mess = db().list_message(self.name_user)
+        
+        for index, value in enumerate(mess, 1):
+            text_list += str(index) + '. ' + str(value[1]) + ' - ' + str(value[3]) + ' - ' + str(value[2] + '\n')
+        return text_list
 
-        return db().list_message(self.name_user)
 
     def del_message(self) -> str:
         """Function remove message"""
-
-        self.send('Numer message to remove:')
+        
+        self.send(self.list_message() + '\n' + 'Id message to remove:')
         message = self.recv()['command']
         if re.search(r'\d', message):
-            db().del_message(self.name_user, int(message))
+            db().del_message(int(message))
             return 'Message removed'
         else:
             return 'Wrong number'
