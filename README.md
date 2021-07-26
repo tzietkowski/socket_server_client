@@ -4,7 +4,7 @@ Second project with socket in python.
 
 Client and Server connected via sockets.
 
-The server has a database of users saved in json.
+The server has a database of users saved in postgresql.
 
 The client has commands:
 
