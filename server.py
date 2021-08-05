@@ -5,7 +5,7 @@ import time
 import json
 import re
 import os
-from data_sql import Sql as db
+from data_sqlite import Sql as db
 
 
 class Server:
